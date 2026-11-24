@@ -79,6 +79,11 @@ form a{font-weight:600;font-size:.9rem}
 .admbar{background:linear-gradient(100deg,var(--plum),var(--ink));color:#fff;border-radius:20px;padding:1.2rem 1.5rem;margin-bottom:1rem}.admbar h2,.admbar p{margin:0}.admbar p{opacity:.8;font-size:.9rem}
 header b a{color:#fff;text-decoration:none}
 .rw b.sm{font-size:1.9rem;padding-top:.7rem}
+.slider{position:relative;aspect-ratio:4/5;max-width:380px;width:100%;justify-self:center;border-radius:190px 190px 22px 22px;overflow:hidden;box-shadow:0 18px 40px rgba(15,76,74,.25);background:var(--mint)}
+.slider img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s}.slider img.on{opacity:1}
+.dots{position:absolute;bottom:.9rem;left:0;right:0;display:flex;justify-content:center;gap:.5rem}
+.dots button{width:11px;height:11px;padding:0;border-radius:50%;background:rgba(255,255,255,.65);border:0}.dots button.on{background:var(--brass)}
+@media(max-width:720px){.slider{max-width:300px;border-radius:150px 150px 20px 20px}}
 </style>
 </head>
 <body>
@@ -129,7 +134,7 @@ async home(){
   app.innerHTML=`<section class="hero2"><div><span class="pill">Casa Vanté Referral Network</span><h1>Know someone who needs a beautiful home? <em>Earn</em> when we deliver it.</h1>
   <p>Join the Casa Vanté Referral Network, share your personal code, and earn a commission when your referral’s job is completed and fully paid.</p>
   <a class="btn" href="#join">Become a partner</a> <button class="alt" onclick="location.hash='how'">How it works</button> <a class="alt-link" href="#login">Partner login</a></div>
-  <svg viewBox="0 0 360 320" aria-hidden="true"><path d="M40 300V120a140 140 0 0 1 280 0v180z" fill="#5B2A5B"/><path d="M80 300V125a100 100 0 0 1 200 0v175z" fill="#CDEBE2"/><circle cx="215" cy="95" r="34" fill="#F2A93B"/><path d="M80 215q50-40 100 0t100 0v85H80z" fill="#0F4C4A" opacity=".18"/><rect x="20" y="268" width="320" height="14" rx="7" fill="#0F4C4A"/><rect x="70" y="205" width="150" height="62" rx="22" fill="#C8452F"/><rect x="58" y="222" width="34" height="46" rx="14" fill="#A93823"/><rect x="198" y="222" width="34" height="46" rx="14" fill="#A93823"/><rect x="95" y="190" width="46" height="34" rx="12" fill="#F2A93B"/><rect x="148" y="194" width="46" height="30" rx="12" fill="#0F4C4A"/><rect x="262" y="150" width="5" height="118" fill="#0F4C4A"/><path d="M244 150l41 0-9-34h-23z" fill="#F2A93B"/><path d="M300 268v-34h28v34z" fill="#C8452F"/><path d="M314 234c-26-24-24-46-8-60 14 18 14 40 8 60zM314 234c14-26 34-30 46-24-6 18-24 28-46 24z" fill="#0F4C4A"/><rect x="108" y="70" width="46" height="58" rx="3" fill="#F2A93B"/><circle cx="131" cy="99" r="12" fill="#C8452F"/></svg></section>
+  <div class="slider" id="sl"><img src="images/1.jpg" alt="Casa Vanté team members holding a branded hard hat" class="on" style="object-position:center 65%"><img src="images/2.jpg" alt="Two Casa Vanté team members in branded hard hats and shirts" style="object-position:center 25%"><div class="dots"><button type="button" class="on" aria-label="Show photo 1"></button><button type="button" aria-label="Show photo 2"></button></div></div></section>
   ${ref?`<div class="box"><h2>Tell us what you need</h2><p>You were referred by partner <b>${e(ref)}</b>. Leave your details and our team will call you.</p>
   <form id="lead"><label>Your name<input name="n" required></label><label>Phone number<input name="p" type="tel" required></label>
   <label>What do you need? (optional)<input name="x"></label><button>Request a call</button></form><div id="m"></div></div>`:''}
@@ -139,7 +144,7 @@ async home(){
   <h2 class="mid">Rewards and recognition</h2><div class="rw">${ms.map(m=>`<div class="r0"><b>${m.needed}</b><span>successful referrals</span><p>${e(m.reward)}</p></div>`).join('')}${INC.map((x,i)=>`<div class="r${(i+1)%4}"><b class="sm">${x[0]}</b><span>${x[1]}</span><p>${x[2]}</p></div>`).join('')}</div>
   <h2 class="mid">Four easy steps</h2><div class="strip"><div><b>1</b>Join free<br><small>Approved instantly</small></div><div><b>2</b>Get your code<br><small>Your own link too</small></div><div><b>3</b>Refer a customer<br><small>Share or submit</small></div><div><b>4</b>Earn your reward<br><small>When the job is paid</small></div></div>
   <div class="cta"><div><h2>Ready to start earning?</h2><p>Registering takes about a minute.</p></div><a class="btn" href="#join">Become a partner</a></div>`;
-  $('#lead')&&($('#lead').onsubmit=async ev=>{ev.preventDefault();const f=new FormData(ev.target);
+  slider();$('#lead')&&($('#lead').onsubmit=async ev=>{ev.preventDefault();const f=new FormData(ev.target);
     const{error}=await db.rpc('submit_lead',{p_code:ref,p_name:f.get('n'),p_phone:f.get('p'),p_notes:f.get('x')});
     $('#m').innerHTML=error?bad('We could not send your request. Please check the link and try again.'):ok('Thank you. Our team will contact you shortly.');if(!error)ev.target.reset()});
 },
@@ -240,6 +245,10 @@ function clearAndReload(ev){ev.preventDefault();
     document.cookie=n+'=;'+d+';path=/';
     for(let i=0;i<h.length-1;i++)document.cookie=n+'=;'+d+';path=/;domain=.'+h.slice(i).join('.')});
   location.reload();return false}
+function slider(){const s=$('#sl');if(!s)return;const im=[...s.querySelectorAll('img')],dt=[...s.querySelectorAll('.dots button')];let k=0;
+  const go=n=>{k=(n+im.length)%im.length;im.forEach((x,i)=>x.classList.toggle('on',i===k));dt.forEach((x,i)=>x.classList.toggle('on',i===k))};
+  dt.forEach((d,i)=>d.onclick=()=>go(i));clearInterval(window._sl);
+  if(!matchMedia('(prefers-reduced-motion:reduce)').matches)window._sl=setInterval(()=>$('#sl')?go(k+1):clearInterval(window._sl),4000)}
 const cp=t=>navigator.clipboard.writeText(t).then(()=>alert('Copied'));
 async function sp(id,status){await db.from('partners').update(status==='approved'?{status,reject_reason:null}:{status}).eq('id',id);V.admin()}
 async function rej(id){const r=prompt('Reason for rejecting this partner (the partner will see it):');if(r===null)return;await db.from('partners').update({status:'rejected',reject_reason:r}).eq('id',id);V.admin()}
