@@ -173,8 +173,11 @@ login(){
 async dashboard(){
   if(isAdmin){location.hash='admin';return}
   if(!user){location.hash='login';return}
-  const[{data:p},{data:rs},{data:rw}]=await Promise.all([db.from('partners').select().eq('id',user.id).single(),
+  let[{data:p,error:pe},{data:rs},{data:rw}]=await Promise.all([db.from('partners').select().eq('id',user.id).single(),
     db.from('referrals').select().order('created_at',{ascending:false}),db.from('partner_rewards').select().order('created_at',{ascending:false})]);
+  if(pe&&pe.code!=='PGRST116'){app.innerHTML='<h2>Database not ready</h2>'+bad('Database error: '+pe.message);return}
+  rs=rs||[];rw=rw||[];
+  if(!p||(p.status!=='rejected'&&(p.status!=='approved'||!p.code))){const{data:h}=await db.rpc('ensure_partner');if(h&&h.id)p=h}
   if(!p||p.status!=='approved'){app.innerHTML=`<h2>Welcome, ${e(p?.name||'Partner')}</h2>`+(p?.status==='rejected'?bad('Your partner account has been closed.'+(p.reject_reason?' Reason: '+p.reject_reason+'.':'')+' Please contact Casa Vanté.'):ok('Your registration is waiting for approval. You will get your referral code as soon as Casa Vanté approves you.'));return}
   await banner();const ms=await milestones(),good=rs.filter(win).length,earned=rs.filter(r=>r.commission_status!=='none').reduce((a,r)=>a+Number(r.commission),0);
   const pend=rs.filter(r=>!['completed','not_proceeding'].includes(r.status)).length,next=ms.find(m=>m.needed>good),link=location.origin+location.pathname+'?ref='+p.code,wa='https://wa.me/?text='+encodeURIComponent('Need interior design, construction or repairs? Contact Casa Vanté through my link: '+link);
