@@ -78,6 +78,7 @@ footer nav{display:flex;gap:1.2rem;justify-content:center;flex-wrap:wrap;margin-
 form a{font-weight:600;font-size:.9rem}
 .admbar{background:linear-gradient(100deg,var(--plum),var(--ink));color:#fff;border-radius:20px;padding:1.2rem 1.5rem;margin-bottom:1rem}.admbar h2,.admbar p{margin:0}.admbar p{opacity:.8;font-size:.9rem}
 header b a{color:#fff;text-decoration:none}
+.rw b.sm{font-size:1.9rem;padding-top:.7rem}
 </style>
 </head>
 <body>
@@ -96,7 +97,8 @@ const $=s=>document.querySelector(s),app=$('#app');
 const e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>'₦'+Number(n||0).toLocaleString('en-NG');
 const LBL={submitted:'Under review',contacted:'Contacted',in_progress:'In progress',completed:'Completed',not_proceeding:'Not proceeding'};
-const MS0=[{needed:5,reward:'One pair of sneakers'},{needed:10,reward:'Premium gift'},{needed:20,reward:'Cash bonus'},{needed:30,reward:'Exclusive VIP reward and recognition'}];
+const MS0=[{needed:30,reward:'Exclusive VIP recognition and reward'}];
+const INC=[['Monthly','every month','Referral Partner of the Month'],['Yearly','every year','Annual top referrer awards'],['Birthday','your special day','Birthday reward'],['Events','VIP access','Exclusive invitations to Casa Vanté events']];
 const ref=new URLSearchParams(location.search).get('ref');
 let user=null,isAdmin=false,REFS=[],UNPAID=false,AN='';
 const pw=(n,l,m)=>`<label>${l}<span class="pw"><input name="${n}" type="password" ${m?'minlength="'+m+'"':''} required autocomplete="${m?'new-password':'current-password'}"><button type="button" class="eye" onclick="eye(this)">Show</button></span></label>`;
@@ -132,9 +134,9 @@ async home(){
   <form id="lead"><label>Your name<input name="n" required></label><label>Phone number<input name="p" type="tel" required></label>
   <label>What do you need? (optional)<input name="x"></label><button>Request a call</button></form><div id="m"></div></div>`:''}
   <div class="grid f"><div class="box c1"><h3>5% commission</h3><p>On eligible labour and service fees from every successful referral.</p></div>
-  <div class="box c2"><h3>Milestone rewards</h3><p>Unlock gifts, bonuses and VIP recognition as your successful referrals grow.</p></div>
+  <div class="box c2"><h3>Milestone rewards</h3><p>Reach 30 successful referrals for exclusive VIP recognition and a reward.</p></div>
   <div class="box c3"><h3>Track everything</h3><p>See every referral, commission and reward in your own dashboard.</p></div></div>
-  <h2 class="mid">Rewards that grow with you</h2><div class="rw">${ms.map((m,i)=>`<div class="r${i%4}"><b>${m.needed}</b><span>successful referrals</span><p>${e(m.reward)}</p></div>`).join('')}</div>
+  <h2 class="mid">Rewards and recognition</h2><div class="rw">${ms.map(m=>`<div class="r0"><b>${m.needed}</b><span>successful referrals</span><p>${e(m.reward)}</p></div>`).join('')}${INC.map((x,i)=>`<div class="r${(i+1)%4}"><b class="sm">${x[0]}</b><span>${x[1]}</span><p>${x[2]}</p></div>`).join('')}</div>
   <h2 class="mid">Four easy steps</h2><div class="strip"><div><b>1</b>Join free<br><small>Approved instantly</small></div><div><b>2</b>Get your code<br><small>Your own link too</small></div><div><b>3</b>Refer a customer<br><small>Share or submit</small></div><div><b>4</b>Earn your reward<br><small>When the job is paid</small></div></div>
   <div class="cta"><div><h2>Ready to start earning?</h2><p>Registering takes about a minute.</p></div><a class="btn" href="#join">Become a partner</a></div>`;
   $('#lead')&&($('#lead').onsubmit=async ev=>{ev.preventDefault();const f=new FormData(ev.target);
@@ -150,11 +152,11 @@ async how(){
   <li><b>Earn your commission.</b> When the job is completed and full payment is received, you earn your commission.</li></ol>
   <h3>Commission</h3><p>FIXERZ partners earn <b>5%</b> of eligible labour and service fees. Materials and reimbursable expenses are excluded. Commission is earned only after the job is completed and the customer has paid in full. All commissions are verified and approved by Casa Vanté.</p>
   <h3>Milestone rewards</h3><div class="tw"><table><tr><th>Successful referrals</th><th>Reward</th></tr>${ms.map(m=>`<tr><td>${m.needed}</td><td>${e(m.reward)}</td></tr>`).join('')}</table></div>
-  <p>Only verified, successful referrals count. Rewards are approved by our team and never issued automatically. We also run special campaigns, a Partner of the Month and annual top-referrer awards.</p>`;
+  <h3>Recognition and awards</h3><ul><li>Referral Partner of the Month</li><li>Annual top referrer awards</li><li>Birthday reward</li><li>Exclusive invitations to Casa Vanté events</li></ul><p>Only verified, successful referrals count towards the milestone. Rewards are approved by our team and never issued automatically.</p>`;
 },
 join(){
   app.innerHTML=`<h2>Become a partner</h2><form id="f"><label>Full name<input name="name" required></label><label>Phone number<input name="phone" type="tel" required></label>
-  <label>Email<input name="email" type="email" required></label><label>City<input name="city"></label><label>Birthday (optional)<input name="birthday" type="date"></label>
+  <label>Email<input name="email" type="email" required></label><label>City<input name="city"></label><label>Birthday (for your birthday reward)<input name="birthday" type="date"></label>
   ${pw('pw','Choose a password',6)}<button>Join the network</button></form><div id="m"></div>`;
   $('#f').onsubmit=async ev=>{ev.preventDefault();const f=Object.fromEntries(new FormData(ev.target));
     const{data,error}=await db.auth.signUp({email:f.email,password:f.pw,options:{data:{name:f.name,phone:f.phone,city:f.city,birthday:f.birthday}}});
@@ -242,7 +244,7 @@ const cp=t=>navigator.clipboard.writeText(t).then(()=>alert('Copied'));
 async function sp(id,status){await db.from('partners').update(status==='approved'?{status,reject_reason:null}:{status}).eq('id',id);V.admin()}
 async function rej(id){const r=prompt('Reason for rejecting this partner (the partner will see it):');if(r===null)return;await db.from('partners').update({status:'rejected',reject_reason:r}).eq('id',id);V.admin()}
 async function ann(ev){ev.preventDefault();await db.from('announcement').update({message:$('#an').value}).eq('id',1);V.admin();return false}
-async function rwd(id){const reward=prompt('Reward given (for example: One pair of sneakers)');if(!reward)return;await db.from('partner_rewards').insert({partner_id:id,reward});V.admin()}
+async function rwd(id){const reward=prompt('Reward or award given (for example: Partner of the Month, Birthday gift, VIP reward)');if(!reward)return;await db.from('partner_rewards').insert({partner_id:id,reward});V.admin()}
 async function sv(id){const r=REFS.find(x=>x.id==id),status=$('#s'+id).value,fee=+$('#f'+id).value||0,paid=$('#p'+id).checked;
   const u={status,service_fee:fee,paid_in_full:paid,admin_note:$('#n'+id).value};
   if(status==='completed'&&paid&&r.commission_status==='none'){u.commission=Math.round(fee*RATE);u.commission_status='approved'}
